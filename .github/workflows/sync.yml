@@ -1,0 +1,63 @@
+name: Sync upstream x402 servers/express
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+on:
+  schedule: [ { cron: "0 * * * *" } ]  # hourly
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions: { contents: write, pull-requests: write }
+    env:
+      UPSTREAM_REPO: coinbase/x402
+      UPSTREAM_PATH: examples/typescript/servers/express
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sparse clone upstream
+        run: |
+          git clone --depth=1 --filter=blob:none --sparse https://github.com/${UPSTREAM_REPO}.git upstream
+          cd upstream
+          git sparse-checkout set "${UPSTREAM_PATH}"
+          echo "UPSTREAM_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+      - name: Resolve latest x402-express version from npm
+        run: |
+          set -euo pipefail
+          VERSION=$(npm view x402-express version || echo "0.0.0")
+          echo "X402_EXPRESS_VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Record resolved version in root package.json
+        run: |
+          node -e "const fs=require('fs');const p='package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));(j.config??={});j.config.x402ExpressVersion=process.env.X402_EXPRESS_VERSION;fs.writeFileSync(p,JSON.stringify(j,null,2));"
+
+      - name: Stage upstream into vendor folder
+        run: |
+          rm -rf vendor/upstream && mkdir -p vendor/upstream
+          rsync -a --delete upstream/${UPSTREAM_PATH}/ vendor/upstream/
+
+      - name: Sanitize & map into template (best-effort)
+        run: |
+          chmod +x scripts/sanitize.sh
+          scripts/sanitize.sh "${UPSTREAM_PATH}" "${UPSTREAM_SHA}"
+
+      - name: Inject x402-express version into template/package.json
+        run: |
+          node -e "const fs=require('fs');const p='template/package.json';if(fs.existsSync(p)){const j=JSON.parse(fs.readFileSync(p,'utf8'));const v=process.env.X402_EXPRESS_VERSION;const setVer=(obj)=>{if(!obj)return false; if(Object.prototype.hasOwnProperty.call(obj,'x402-express')){if(v!=='0.0.0'){obj['x402-express']='^'+v;} else {delete obj['x402-express'];} return true;} return false;};const changed=setVer(j.dependencies)||setVer(j.devDependencies);if(!changed && v!=='0.0.0'){(j.dependencies??={})['x402-express']='^'+v;}fs.writeFileSync(p,JSON.stringify(j,null,2));}"
+
+      - name: Open PR with changes
+        uses: peter-evans/create-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          commit-message: "chore(express): sync from ${UPSTREAM_REPO}@${{ env.UPSTREAM_SHA }}"
+          branch: chore/sync-upstream
+          title: "Sync upstream (servers/express) — ${{ env.UPSTREAM_SHA }}"
+          body: |
+            Auto-synced from https://github.com/${{ env.UPSTREAM_REPO }}
+            Path: ${{ env.UPSTREAM_PATH }}
+            SHA:  ${{ env.UPSTREAM_SHA }}
+

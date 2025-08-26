@@ -1,0 +1,20 @@
+{
+  "name": "x402-express-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Starter app scaffolded from x402-express-starter and kept in sync with upstream example.",
+  "scripts": {
+    "dev": "tsx watch index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc -p .",
+    "typecheck": "tsc -p . --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.4"
+  },
+  "engines": { "node": ">=18" }
+}
+

@@ -1,0 +1,17 @@
+{
+  "name": "@payai/x402-express-starter",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Create an x402 Express server without cloning the monorepo.",
+  "type": "module",
+  "bin": {
+    "create-x402-express": "bin/create.js"
+  },
+  "files": ["template/**", "bin/**", "LICENSE", "NOTICE", "README.md"],
+  "license": "Apache-2.0",
+  "engines": { "node": ">=18" },
+  "keywords": ["x402", "express", "typescript", "coinbase", "starter", "template", "example"],
+  "author": "PayAI",
+  "repository": { "type": "git", "url": "https://github.com/PayAINetwork/x402-express-starter" }
+}
+
