@@ -7,11 +7,32 @@
   "bin": {
     "create-x402-express": "bin/create.js"
   },
-  "files": ["template/**", "bin/**", "LICENSE", "NOTICE", "README.md"],
+  "files": [
+    "template/**",
+    "bin/**",
+    "LICENSE",
+    "NOTICE",
+    "README.md"
+  ],
   "license": "Apache-2.0",
-  "engines": { "node": ">=18" },
-  "keywords": ["x402", "express", "typescript", "coinbase", "starter", "template", "example"],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "x402",
+    "express",
+    "typescript",
+    "coinbase",
+    "starter",
+    "template",
+    "example"
+  ],
   "author": "PayAI",
-  "repository": { "type": "git", "url": "https://github.com/PayAINetwork/x402-express-starter" }
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PayAINetwork/x402-express-starter"
+  },
+  "config": {
+    "x402ExpressVersion": "0.5.3"
+  }
 }
-

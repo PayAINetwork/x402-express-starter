@@ -1,0 +1,2 @@
+This package includes portions derived from coinbase/x402 (examples/typescript/servers/express), Apache-2.0,
+commit 0dfd3e683f1563543bd62a3ad84cbc6851d4054b. See LICENSE and upstream LICENSE notices.
