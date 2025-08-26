@@ -10,6 +10,22 @@ mkdir -p vendor/upstream
 mkdir -p template
 rsync -a --delete vendor/upstream/ template/
 
+# add the payai facilitator URL in env templates after sync
+DEFAULT_FACILITATOR_URL="https://facilitator.payai.network"
+update_facilitator_url() {
+  local file="$1"
+  if [[ -f "$file" ]]; then
+    if grep -q '^FACILITATOR_URL=' "$file"; then
+      sed -i.bak 's|^FACILITATOR_URL=.*|FACILITATOR_URL=https://facilitator.payai.network|' "$file" && rm -f "$file.bak"
+    else
+      printf "\nFACILITATOR_URL=%s\n" "$DEFAULT_FACILITATOR_URL" >> "$file"
+    fi
+  fi
+}
+
+update_facilitator_url template/.env-local
+update_facilitator_url template/.env.example
+
 # Refresh NOTICE with the commit we synced from
 cat > NOTICE <<EOF
 This package includes portions derived from coinbase/x402 (${UP_PATH}), Apache-2.0,
