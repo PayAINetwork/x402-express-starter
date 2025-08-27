@@ -1,8 +1,8 @@
 {
   "name": "@payai/x402-express-starter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
-  "description": "Create an x402 Express server without cloning the monorepo.",
+  "description": "Create an x402 Express server in less than 2 minutes!",
   "type": "module",
   "bin": {
     "create-x402-express": "bin/create.js"
