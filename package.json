@@ -33,6 +33,6 @@
     "url": "https://github.com/PayAINetwork/x402-express-starter"
   },
   "config": {
-    "x402ExpressVersion": "0.5.3"
+    "x402ExpressVersion": "0.6.0"
   }
 }
