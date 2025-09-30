@@ -48,6 +48,20 @@ jobs:
         run: |
           node -e "const fs=require('fs');const p='template/package.json';if(fs.existsSync(p)){const j=JSON.parse(fs.readFileSync(p,'utf8'));const v=process.env.X402_EXPRESS_VERSION;const setVer=(obj)=>{if(!obj)return false; if(Object.prototype.hasOwnProperty.call(obj,'x402-express')){if(v!=='0.0.0'){obj['x402-express']='^'+v;} else {delete obj['x402-express'];} return true;} return false;};const changed=setVer(j.dependencies)||setVer(j.devDependencies);if(!changed && v!=='0.0.0'){(j.dependencies??={})['x402-express']='^'+v;}fs.writeFileSync(p,JSON.stringify(j,null,2));}"
 
+      - name: Determine if there are changes
+        run: |
+          # include untracked files in change detection
+          if git diff --quiet && git ls-files --others --exclude-standard --error-unmatch . >/dev/null 2>&1; then
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          else
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          fi
+
+      - name: Bump starter package version (patch)
+        if: ${{ env.HAS_CHANGES == 'true' }}
+        run: |
+          node -e "const fs=require('fs');const p='package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));const v=j.version||'0.0.0';const parts=v.split('.').map(n=>parseInt(n,10));while(parts.length<3)parts.push(0);parts[2]=isNaN(parts[2])?0:parts[2]+1;j.version=parts.join('.');fs.writeFileSync(p,JSON.stringify(j,null,2));"
+
       - name: Open PR with changes
         uses: peter-evans/create-pull-request@v6
         env:
