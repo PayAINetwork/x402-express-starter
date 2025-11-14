@@ -4,7 +4,7 @@ permissions:
   pull-requests: write
   issues: write
 on:
-  schedule: [ { cron: "0 * * * *" } ]  # hourly
+  schedule: [{ cron: "0 * * * *" }] # hourly
   workflow_dispatch:
 
 jobs:
@@ -16,6 +16,13 @@ jobs:
       UPSTREAM_PATH: examples/typescript/servers/express
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install required tools
+        run: |
+          set -euo pipefail
+          if ! command -v rsync >/dev/null 2>&1; then
+            (apt-get update && apt-get install -y rsync) || (sudo apt-get update && sudo apt-get install -y rsync)
+          fi
 
       - name: Sparse clone upstream
         run: |
@@ -43,6 +50,31 @@ jobs:
         run: |
           chmod +x scripts/sanitize.sh
           scripts/sanitize.sh "${UPSTREAM_PATH}" "${UPSTREAM_SHA}"
+
+      - name: Verify custom env values are preserved
+        run: |
+          set -euo pipefail
+          echo "Verifying FACILITATOR_URL and NETWORK in template/.env-local..."
+
+          if [[ ! -f template/.env-local ]]; then
+            echo "ERROR: template/.env-local not found"
+            exit 1
+          fi
+
+          FACILITATOR_URL=$(grep '^FACILITATOR_URL=' template/.env-local | cut -d= -f2-)
+          NETWORK=$(grep '^NETWORK=' template/.env-local | cut -d= -f2-)
+
+          if [[ "$FACILITATOR_URL" != "https://facilitator.payai.network" ]]; then
+            echo "ERROR: FACILITATOR_URL is '$FACILITATOR_URL', expected 'https://facilitator.payai.network'"
+            exit 1
+          fi
+
+          if [[ "$NETWORK" != "solana-devnet" ]]; then
+            echo "ERROR: NETWORK is '$NETWORK', expected 'solana-devnet'"
+            exit 1
+          fi
+
+          echo "✓ FACILITATOR_URL and NETWORK are correctly set"
 
       - name: Inject x402-express version into template/package.json
         run: |
@@ -74,4 +106,3 @@ jobs:
             Auto-synced from https://github.com/${{ env.UPSTREAM_REPO }}
             Path: ${{ env.UPSTREAM_PATH }}
             SHA:  ${{ env.UPSTREAM_SHA }}
-

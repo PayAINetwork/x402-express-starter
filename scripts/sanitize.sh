@@ -10,21 +10,31 @@ mkdir -p vendor/upstream
 mkdir -p template
 rsync -a --delete vendor/upstream/ template/
 
-# add the payai facilitator URL in env templates after sync
+# add the payai facilitator URL and NETWORK in env templates after sync
 DEFAULT_FACILITATOR_URL="https://facilitator.payai.network"
-update_facilitator_url() {
+DEFAULT_NETWORK="solana-devnet"
+
+update_env_values() {
   local file="$1"
   if [[ -f "$file" ]]; then
+    # Update or add FACILITATOR_URL
     if grep -q '^FACILITATOR_URL=' "$file"; then
       sed -i.bak 's|^FACILITATOR_URL=.*|FACILITATOR_URL=https://facilitator.payai.network|' "$file" && rm -f "$file.bak"
     else
       printf "\nFACILITATOR_URL=%s\n" "$DEFAULT_FACILITATOR_URL" >> "$file"
     fi
+
+    # Update or add NETWORK
+    if grep -q '^NETWORK=' "$file"; then
+      sed -i.bak 's|^NETWORK=.*|NETWORK=solana-devnet|' "$file" && rm -f "$file.bak"
+    else
+      printf "NETWORK=%s\n" "$DEFAULT_NETWORK" >> "$file"
+    fi
   fi
 }
 
-update_facilitator_url template/.env-local
-update_facilitator_url template/.env.example
+update_env_values template/.env-local
+update_env_values template/.env.example
 
 # Refresh NOTICE with the commit we synced from
 cat > NOTICE <<EOF
