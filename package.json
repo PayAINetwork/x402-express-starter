@@ -33,6 +33,11 @@
     "url": "https://github.com/PayAINetwork/x402-express-starter"
   },
   "config": {
-    "x402ExpressVersion": "0.7.1"
+    "x402ExpressVersion": "1.0.0",
+    "x402FetchVersion": "1.0.0",
+    "x402EvmVersion": "2.0.0",
+    "x402SvmVersion": "2.0.0",
+    "x402CoreVersion": "2.0.0",
+    "x402ExtensionsVersion": "2.0.0"
   }
 }
