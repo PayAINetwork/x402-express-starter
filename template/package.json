@@ -1,5 +1,5 @@
 {
-  "name": "express-server-example",
+  "name": "@x402/express-server-example",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,7 +12,11 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.18.2",
-    "x402-express": "^0.7.1"
+    "x402-express": "^1.0.0",
+    "@x402/evm": "^2.0.0",
+    "@x402/svm": "^2.0.0",
+    "@x402/core": "^2.0.0",
+    "@x402/extensions": "^2.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
