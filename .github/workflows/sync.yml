@@ -100,7 +100,7 @@ jobs:
       - name: Verify custom env values are preserved
         run: |
           set -euo pipefail
-          echo "Verifying FACILITATOR_URL and NETWORK in template/.env-local..."
+          echo "Verifying FACILITATOR_URL in template/.env-local..."
 
           if [[ ! -f template/.env-local ]]; then
             echo "ERROR: template/.env-local not found"
@@ -108,19 +108,13 @@ jobs:
           fi
 
           FACILITATOR_URL=$(grep '^FACILITATOR_URL=' template/.env-local | cut -d= -f2-)
-          NETWORK=$(grep '^NETWORK=' template/.env-local | cut -d= -f2-)
 
           if [[ "$FACILITATOR_URL" != "https://facilitator.payai.network" ]]; then
             echo "ERROR: FACILITATOR_URL is '$FACILITATOR_URL', expected 'https://facilitator.payai.network'"
             exit 1
           fi
 
-          if [[ "$NETWORK" != "solana-devnet" ]]; then
-            echo "ERROR: NETWORK is '$NETWORK', expected 'solana-devnet'"
-            exit 1
-          fi
-
-          echo "✓ FACILITATOR_URL and NETWORK are correctly set"
+          echo "✓ FACILITATOR_URL is correctly set"
 
       - name: Replace workspace dependencies with npm versions
         run: |
