@@ -1,5 +1,5 @@
 {
-  "name": "@payai/x402-express-starter",
+  "name": "x402-express-starter",
   "version": "1.0.1",
   "private": false,
   "description": "Create an x402 Express server in less than 2 minutes!",
