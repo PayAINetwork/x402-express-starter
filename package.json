@@ -1,6 +1,6 @@
 {
-  "name": "@payai/x402-express-starter",
-  "version": "1.0.1",
+  "name": "x402-express-starter",
+  "version": "1.1.0",
   "private": false,
   "description": "Create an x402 Express server in less than 2 minutes!",
   "type": "module",
@@ -33,6 +33,11 @@
     "url": "https://github.com/PayAINetwork/x402-express-starter"
   },
   "config": {
-    "x402ExpressVersion": "0.7.1"
+    "x402ExpressVersion": "2.0.0",
+    "x402FetchVersion": "1.0.0",
+    "x402EvmVersion": "2.0.0",
+    "x402SvmVersion": "2.0.0",
+    "x402CoreVersion": "2.0.0",
+    "x402ExtensionsVersion": "2.0.0"
   }
 }

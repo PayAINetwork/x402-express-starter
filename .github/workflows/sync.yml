@@ -31,15 +31,61 @@ jobs:
           git sparse-checkout set "${UPSTREAM_PATH}"
           echo "UPSTREAM_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
-      - name: Resolve latest x402-express version from npm
+      - name: Resolve latest x402 package versions from npm
         run: |
           set -euo pipefail
-          VERSION=$(npm view x402-express version || echo "0.0.0")
-          echo "X402_EXPRESS_VERSION=${VERSION}" >> $GITHUB_ENV
+          # Resolve versions for all x402 packages
+          X402_EXPRESS_VERSION=$(npm view @x402/express version 2>/dev/null || echo "0.0.0")
+          X402_FETCH_VERSION=$(npm view x402-fetch version 2>/dev/null || echo "0.0.0")
+          X402_EVM_VERSION=$(npm view @x402/evm version 2>/dev/null || echo "0.0.0")
+          X402_SVM_VERSION=$(npm view @x402/svm version 2>/dev/null || echo "0.0.0")
+          X402_CORE_VERSION=$(npm view @x402/core version 2>/dev/null || echo "0.0.0")
+          X402_EXTENSIONS_VERSION=$(npm view @x402/extensions version 2>/dev/null || echo "0.0.0")
+          
+          echo "X402_EXPRESS_VERSION=${X402_EXPRESS_VERSION}" >> $GITHUB_ENV
+          echo "X402_FETCH_VERSION=${X402_FETCH_VERSION}" >> $GITHUB_ENV
+          echo "X402_EVM_VERSION=${X402_EVM_VERSION}" >> $GITHUB_ENV
+          echo "X402_SVM_VERSION=${X402_SVM_VERSION}" >> $GITHUB_ENV
+          echo "X402_CORE_VERSION=${X402_CORE_VERSION}" >> $GITHUB_ENV
+          echo "X402_EXTENSIONS_VERSION=${X402_EXTENSIONS_VERSION}" >> $GITHUB_ENV
 
-      - name: Record resolved version in root package.json
+      - name: Store old versions for comparison
         run: |
-          node -e "const fs=require('fs');const p='package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));(j.config??={});j.config.x402ExpressVersion=process.env.X402_EXPRESS_VERSION;fs.writeFileSync(p,JSON.stringify(j,null,2));"
+          OLD_EXPRESS=$(node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('package.json','utf8'));const c=j.config||{};console.log(c.x402ExpressVersion||'0.0.0')")
+          OLD_FETCH=$(node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('package.json','utf8'));const c=j.config||{};console.log(c.x402FetchVersion||'0.0.0')")
+          OLD_EVM=$(node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('package.json','utf8'));const c=j.config||{};console.log(c.x402EvmVersion||'0.0.0')")
+          OLD_SVM=$(node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('package.json','utf8'));const c=j.config||{};console.log(c.x402SvmVersion||'0.0.0')")
+          OLD_CORE=$(node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('package.json','utf8'));const c=j.config||{};console.log(c.x402CoreVersion||'0.0.0')")
+          OLD_EXTENSIONS=$(node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('package.json','utf8'));const c=j.config||{};console.log(c.x402ExtensionsVersion||'0.0.0')")
+          echo "OLD_X402_EXPRESS_VERSION=${OLD_EXPRESS}" >> $GITHUB_ENV
+          echo "OLD_X402_FETCH_VERSION=${OLD_FETCH}" >> $GITHUB_ENV
+          echo "OLD_X402_EVM_VERSION=${OLD_EVM}" >> $GITHUB_ENV
+          echo "OLD_X402_SVM_VERSION=${OLD_SVM}" >> $GITHUB_ENV
+          echo "OLD_X402_CORE_VERSION=${OLD_CORE}" >> $GITHUB_ENV
+          echo "OLD_X402_EXTENSIONS_VERSION=${OLD_EXTENSIONS}" >> $GITHUB_ENV
+
+      - name: Record resolved versions in root package.json
+        run: |
+          node <<'EOF'
+          const fs = require('fs');
+          const p = 'package.json';
+          const j = JSON.parse(fs.readFileSync(p, 'utf-8'));
+          j.config = j.config || {};
+          j.config.x402ExpressVersion = process.env.X402_EXPRESS_VERSION;
+          j.config.x402FetchVersion = process.env.X402_FETCH_VERSION;
+          j.config.x402EvmVersion = process.env.X402_EVM_VERSION;
+          j.config.x402SvmVersion = process.env.X402_SVM_VERSION;
+          j.config.x402CoreVersion = process.env.X402_CORE_VERSION;
+          j.config.x402ExtensionsVersion = process.env.X402_EXTENSIONS_VERSION;
+          fs.writeFileSync(p, JSON.stringify(j, null, 2));
+          EOF
+        env:
+          X402_EXPRESS_VERSION: ${{ env.X402_EXPRESS_VERSION }}
+          X402_FETCH_VERSION: ${{ env.X402_FETCH_VERSION }}
+          X402_EVM_VERSION: ${{ env.X402_EVM_VERSION }}
+          X402_SVM_VERSION: ${{ env.X402_SVM_VERSION }}
+          X402_CORE_VERSION: ${{ env.X402_CORE_VERSION }}
+          X402_EXTENSIONS_VERSION: ${{ env.X402_EXTENSIONS_VERSION }}
 
       - name: Stage upstream into vendor folder
         run: |
@@ -54,31 +100,84 @@ jobs:
       - name: Verify custom env values are preserved
         run: |
           set -euo pipefail
-          echo "Verifying FACILITATOR_URL and NETWORK in template/.env-local..."
+          echo "Verifying FACILITATOR_URL in template/.env-local..."
 
           if [[ ! -f template/.env-local ]]; then
             echo "ERROR: template/.env-local not found"
             exit 1
           fi
 
-          FACILITATOR_URL=$(grep '^FACILITATOR_URL=' template/.env-local | cut -d= -f2-)
-          NETWORK=$(grep '^NETWORK=' template/.env-local | cut -d= -f2-)
+          # Extract FACILITATOR_URL value, ensuring we only get the value on that line (not subsequent lines)
+          # Use awk to parse the key=value format and stop after the first match
+          FACILITATOR_URL=$(awk -F= '/^FACILITATOR_URL=/ {print $2; exit}' template/.env-local)
 
           if [[ "$FACILITATOR_URL" != "https://facilitator.payai.network" ]]; then
             echo "ERROR: FACILITATOR_URL is '$FACILITATOR_URL', expected 'https://facilitator.payai.network'"
             exit 1
           fi
 
-          if [[ "$NETWORK" != "solana-devnet" ]]; then
-            echo "ERROR: NETWORK is '$NETWORK', expected 'solana-devnet'"
-            exit 1
-          fi
+          echo "✓ FACILITATOR_URL is correctly set"
 
-          echo "✓ FACILITATOR_URL and NETWORK are correctly set"
-
-      - name: Inject x402-express version into template/package.json
+      - name: Replace workspace dependencies with npm versions
         run: |
-          node -e "const fs=require('fs');const p='template/package.json';if(fs.existsSync(p)){const j=JSON.parse(fs.readFileSync(p,'utf8'));const v=process.env.X402_EXPRESS_VERSION;const setVer=(obj)=>{if(!obj)return false; if(Object.prototype.hasOwnProperty.call(obj,'x402-express')){if(v!=='0.0.0'){obj['x402-express']='^'+v;} else {delete obj['x402-express'];} return true;} return false;};const changed=setVer(j.dependencies)||setVer(j.devDependencies);if(!changed && v!=='0.0.0'){(j.dependencies??={})['x402-express']='^'+v;}fs.writeFileSync(p,JSON.stringify(j,null,2));}"
+          node <<'EOF'
+          const fs = require('fs');
+          
+          const p = 'template/package.json';
+          if (!fs.existsSync(p)) {
+            console.log('template/package.json not found, skipping');
+            process.exit(0);
+          }
+          
+          const j = JSON.parse(fs.readFileSync(p, 'utf-8'));
+          
+          // Map workspace package names to npm package names and their resolved versions
+          // Note: Most packages keep the same name (@x402/express → @x402/express)
+          const mapping = {
+            '@x402/express': { npmPkg: '@x402/express', version: process.env.X402_EXPRESS_VERSION },
+            '@x402/fetch': { npmPkg: 'x402-fetch', version: process.env.X402_FETCH_VERSION },
+            '@x402/evm': { npmPkg: '@x402/evm', version: process.env.X402_EVM_VERSION },
+            '@x402/svm': { npmPkg: '@x402/svm', version: process.env.X402_SVM_VERSION },
+            '@x402/core': { npmPkg: '@x402/core', version: process.env.X402_CORE_VERSION },
+            '@x402/extensions': { npmPkg: '@x402/extensions', version: process.env.X402_EXTENSIONS_VERSION },
+          };
+          
+          let changed = false;
+          
+          // Process both dependencies and devDependencies
+          for (const depsKey of ['dependencies', 'devDependencies']) {
+            if (!j[depsKey]) continue;
+            
+            for (const [workspacePkg, { npmPkg, version }] of Object.entries(mapping)) {
+              if (j[depsKey][workspacePkg]) {
+                if (version && version !== '0.0.0') {
+                  // Remove workspace dependency
+                  delete j[depsKey][workspacePkg];
+                  // Add npm dependency with version
+                  j[depsKey][npmPkg] = `^${version}`;
+                  changed = true;
+                  console.log(`Replaced ${workspacePkg} (workspace) → ${npmPkg}@^${version}`);
+                } else {
+                  console.warn(`Warning: No valid version resolved for ${npmPkg}, keeping workspace dependency`);
+                }
+              }
+            }
+          }
+          
+          if (changed) {
+            fs.writeFileSync(p, JSON.stringify(j, null, 2) + '\n');
+            console.log('Updated template/package.json with npm versions');
+          } else {
+            console.log('No workspace dependencies found to replace');
+          }
+          EOF
+        env:
+          X402_EXPRESS_VERSION: ${{ env.X402_EXPRESS_VERSION }}
+          X402_FETCH_VERSION: ${{ env.X402_FETCH_VERSION }}
+          X402_EVM_VERSION: ${{ env.X402_EVM_VERSION }}
+          X402_SVM_VERSION: ${{ env.X402_SVM_VERSION }}
+          X402_CORE_VERSION: ${{ env.X402_CORE_VERSION }}
+          X402_EXTENSIONS_VERSION: ${{ env.X402_EXTENSIONS_VERSION }}
 
       - name: Determine if there are changes
         run: |
@@ -89,10 +188,97 @@ jobs:
             echo "HAS_CHANGES=true" >> $GITHUB_ENV
           fi
 
-      - name: Bump starter package version (patch)
+      - name: Bump starter package version
         if: ${{ env.HAS_CHANGES == 'true' }}
         run: |
-          node -e "const fs=require('fs');const p='package.json';const j=JSON.parse(fs.readFileSync(p,'utf8'));const v=j.version||'0.0.0';const parts=v.split('.').map(n=>parseInt(n,10));while(parts.length<3)parts.push(0);parts[2]=isNaN(parts[2])?0:parts[2]+1;j.version=parts.join('.');fs.writeFileSync(p,JSON.stringify(j,null,2));"
+          node <<'EOF'
+          const fs = require('fs');
+          const p = 'package.json';
+          const j = JSON.parse(fs.readFileSync(p, 'utf-8'));
+          const v = j.version || '0.0.0';
+          const parts = v.split('.').map(n => parseInt(n, 10));
+          while (parts.length < 3) parts.push(0);
+          
+          const parseVersion = (v) => {
+            if (!v || v === '0.0.0') return { major: 0, minor: 0, patch: 0 };
+            const parts = v.split('.').map(n => parseInt(n, 10));
+            return {
+              major: isNaN(parts[0]) ? 0 : parts[0],
+              minor: isNaN(parts[1]) ? 0 : parts[1],
+              patch: isNaN(parts[2]) ? 0 : parts[2],
+            };
+          };
+          
+          const compareVersions = (oldV, newV) => {
+            if (oldV === '0.0.0') return 'none'; // New dependency, don't count as change
+            const old = parseVersion(oldV);
+            const new_ = parseVersion(newV);
+            
+            if (old.major < new_.major) return 'major';
+            if (old.major === new_.major && old.minor < new_.minor) return 'minor';
+            if (old.major === new_.major && old.minor === new_.minor && old.patch < new_.patch) return 'patch';
+            return 'none';
+          };
+          
+          const oldVersions = {
+            express: process.env.OLD_X402_EXPRESS_VERSION || '0.0.0',
+            fetch: process.env.OLD_X402_FETCH_VERSION || '0.0.0',
+            evm: process.env.OLD_X402_EVM_VERSION || '0.0.0',
+            svm: process.env.OLD_X402_SVM_VERSION || '0.0.0',
+            core: process.env.OLD_X402_CORE_VERSION || '0.0.0',
+            extensions: process.env.OLD_X402_EXTENSIONS_VERSION || '0.0.0',
+          };
+          
+          const newVersions = {
+            express: process.env.X402_EXPRESS_VERSION || '0.0.0',
+            fetch: process.env.X402_FETCH_VERSION || '0.0.0',
+            evm: process.env.X402_EVM_VERSION || '0.0.0',
+            svm: process.env.X402_SVM_VERSION || '0.0.0',
+            core: process.env.X402_CORE_VERSION || '0.0.0',
+            extensions: process.env.X402_EXTENSIONS_VERSION || '0.0.0',
+          };
+          
+          // Check for major or minor changes
+          let hadMajorOrMinorChange = false;
+          const changes = [];
+          
+          for (const [pkg, oldV] of Object.entries(oldVersions)) {
+            const newV = newVersions[pkg];
+            const change = compareVersions(oldV, newV);
+            if (change === 'major' || change === 'minor') {
+              hadMajorOrMinorChange = true;
+              changes.push(`${pkg}: ${oldV} → ${newV} (${change})`);
+            }
+          }
+          
+          if (hadMajorOrMinorChange) {
+            parts[1] = (parts[1] || 0) + 1;
+            parts[2] = 0;
+            console.log('Detected major or minor version change in dependencies:');
+            changes.forEach(c => console.log(`  - ${c}`));
+            console.log('Bumping minor version');
+          } else {
+            parts[2] = (parts[2] || 0) + 1;
+            console.log('Only patch changes detected, bumping patch version');
+          }
+          
+          j.version = parts.join('.');
+          fs.writeFileSync(p, JSON.stringify(j, null, 2));
+          console.log(`Bumped version to ${j.version}`);
+          EOF
+        env:
+          OLD_X402_EXPRESS_VERSION: ${{ env.OLD_X402_EXPRESS_VERSION }}
+          OLD_X402_FETCH_VERSION: ${{ env.OLD_X402_FETCH_VERSION }}
+          OLD_X402_EVM_VERSION: ${{ env.OLD_X402_EVM_VERSION }}
+          OLD_X402_SVM_VERSION: ${{ env.OLD_X402_SVM_VERSION }}
+          OLD_X402_CORE_VERSION: ${{ env.OLD_X402_CORE_VERSION }}
+          OLD_X402_EXTENSIONS_VERSION: ${{ env.OLD_X402_EXTENSIONS_VERSION }}
+          X402_EXPRESS_VERSION: ${{ env.X402_EXPRESS_VERSION }}
+          X402_FETCH_VERSION: ${{ env.X402_FETCH_VERSION }}
+          X402_EVM_VERSION: ${{ env.X402_EVM_VERSION }}
+          X402_SVM_VERSION: ${{ env.X402_SVM_VERSION }}
+          X402_CORE_VERSION: ${{ env.X402_CORE_VERSION }}
+          X402_EXTENSIONS_VERSION: ${{ env.X402_EXTENSIONS_VERSION }}
 
       - name: Open PR with changes
         uses: peter-evans/create-pull-request@v6
