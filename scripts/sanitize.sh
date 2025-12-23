@@ -10,9 +10,8 @@ mkdir -p vendor/upstream
 mkdir -p template
 rsync -a --delete vendor/upstream/ template/
 
-# add the payai facilitator URL and NETWORK in env templates after sync
+# add the payai facilitator URL in env templates after sync
 DEFAULT_FACILITATOR_URL="https://facilitator.payai.network"
-DEFAULT_NETWORK="solana-devnet"
 
 update_env_values() {
   local file="$1"
@@ -21,15 +20,13 @@ update_env_values() {
     if grep -q '^FACILITATOR_URL=' "$file"; then
       sed -i.bak 's|^FACILITATOR_URL=.*|FACILITATOR_URL=https://facilitator.payai.network|' "$file" && rm -f "$file.bak"
     else
-      printf "\nFACILITATOR_URL=%s\n" "$DEFAULT_FACILITATOR_URL" >> "$file"
+      # Ensure file ends with newline before appending
+      [[ -s "$file" ]] && [[ $(tail -c1 "$file") != $'\n' ]] && echo >> "$file"
+      printf "FACILITATOR_URL=%s\n" "$DEFAULT_FACILITATOR_URL" >> "$file"
     fi
 
-    # Update or add NETWORK
-    if grep -q '^NETWORK=' "$file"; then
-      sed -i.bak 's|^NETWORK=.*|NETWORK=solana-devnet|' "$file" && rm -f "$file.bak"
-    else
-      printf "NETWORK=%s\n" "$DEFAULT_NETWORK" >> "$file"
-    fi
+    # Note: NETWORK is no longer automatically added
+    # If NETWORK exists in the file, we leave it as-is (don't modify or remove it)
   fi
 }
 

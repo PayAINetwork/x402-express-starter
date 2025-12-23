@@ -107,7 +107,9 @@ jobs:
             exit 1
           fi
 
-          FACILITATOR_URL=$(grep '^FACILITATOR_URL=' template/.env-local | cut -d= -f2-)
+          # Extract FACILITATOR_URL value, ensuring we only get the value on that line (not subsequent lines)
+          # Use awk to parse the key=value format and stop after the first match
+          FACILITATOR_URL=$(awk -F= '/^FACILITATOR_URL=/ {print $2; exit}' template/.env-local)
 
           if [[ "$FACILITATOR_URL" != "https://facilitator.payai.network" ]]; then
             echo "ERROR: FACILITATOR_URL is '$FACILITATOR_URL', expected 'https://facilitator.payai.network'"
