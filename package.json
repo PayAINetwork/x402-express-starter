@@ -1,6 +1,6 @@
 {
   "name": "x402-express-starter",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": false,
   "description": "Create an x402 Express server in less than 2 minutes!",
   "type": "module",
