@@ -12,11 +12,11 @@
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.18.2",
-    "@x402/express": "^2.1.0",
-    "@x402/evm": "^2.1.0",
-    "@x402/svm": "^2.1.0",
-    "@x402/core": "^2.1.0",
-    "@x402/extensions": "^2.1.0"
+    "@x402/express": "^2.2.0",
+    "@x402/evm": "^2.2.0",
+    "@x402/svm": "^2.2.0",
+    "@x402/core": "^2.2.0",
+    "@x402/extensions": "^2.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
