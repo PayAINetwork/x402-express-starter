@@ -17,6 +17,3 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm ci --ignore-scripts
       - run: npm pack && npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: "" # explicitly set to empty string to avoid using the token and use trusted publishing instead
-

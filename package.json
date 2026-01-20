@@ -2,6 +2,9 @@
   "name": "@payai/x402-express-starter",
   "version": "1.3.0",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Create an x402 Express server in less than 2 minutes!",
   "type": "module",
   "bin": {
