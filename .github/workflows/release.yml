@@ -12,8 +12,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: https://registry.npmjs.org
-          scope: '@payai'
       - run: npm ci --ignore-scripts
       - run: npm pack && npm publish --provenance --access public
 
