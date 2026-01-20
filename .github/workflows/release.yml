@@ -1,19 +1,29 @@
 name: Release
 on:
-  push: { branches: [ main ] }
+  push:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   publish-npm:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
+      id-token: write      # required for Trusted Publishing
       contents: read
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: https://registry.npmjs.org
-      - run: npm ci --ignore-scripts
-      - run: npm pack && npm publish --access public
+          registry-url: https://registry.npmjs.org/
+
+      - name: Update npm to latest
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Publish to npm
+        run: npm publish --access public
