@@ -30,7 +30,7 @@
   "author": "PayAI",
   "repository": {
     "type": "git",
-    "url": "https://github.com/PayAINetwork/x402-express-starter"
+    "url": "git+https://github.com/PayAINetwork/x402-express-starter.git"
   },
   "config": {
     "x402ExpressVersion": "2.2.0",
