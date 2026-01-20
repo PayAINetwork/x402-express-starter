@@ -16,6 +16,4 @@ jobs:
           scope: '@payai'
       - run: npm ci --ignore-scripts
       - run: npm pack && npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
