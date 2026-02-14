@@ -1,6 +1,6 @@
 {
   "name": "@payai/x402-express-starter",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "private": false,
   "publishConfig": {
     "access": "public",
@@ -37,6 +37,10 @@
     "url": "git+https://github.com/PayAINetwork/x402-express-starter.git"
   },
   "config": {
-    "x402ExpressVersion": "2.3.0"
+    "x402ExpressVersion": "2.3.0",
+    "x402EvmVersion": "2.3.1",
+    "x402SvmVersion": "2.3.0",
+    "x402CoreVersion": "2.3.1",
+    "x402ExtensionsVersion": "2.3.1"
   }
 }
