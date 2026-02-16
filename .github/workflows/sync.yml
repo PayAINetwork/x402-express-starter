@@ -31,7 +31,7 @@ jobs:
           git sparse-checkout set "${UPSTREAM_PATH}"
           echo "UPSTREAM_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
-      - name: Resolve latest x402 package versions from npm
+      - name: Resolve latest x402 and payai package versions from npm
         run: |
           set -euo pipefail
           X402_EXPRESS_VERSION=$(npm view @x402/express version 2>/dev/null || echo "0.0.0")
@@ -39,12 +39,14 @@ jobs:
           X402_SVM_VERSION=$(npm view @x402/svm version 2>/dev/null || echo "0.0.0")
           X402_CORE_VERSION=$(npm view @x402/core version 2>/dev/null || echo "0.0.0")
           X402_EXTENSIONS_VERSION=$(npm view @x402/extensions version 2>/dev/null || echo "0.0.0")
+          PAYAI_FACILITATOR_VERSION=$(npm view @payai/facilitator version 2>/dev/null || echo "1.0.0")
 
           echo "X402_EXPRESS_VERSION=${X402_EXPRESS_VERSION}" >> $GITHUB_ENV
           echo "X402_EVM_VERSION=${X402_EVM_VERSION}" >> $GITHUB_ENV
           echo "X402_SVM_VERSION=${X402_SVM_VERSION}" >> $GITHUB_ENV
           echo "X402_CORE_VERSION=${X402_CORE_VERSION}" >> $GITHUB_ENV
           echo "X402_EXTENSIONS_VERSION=${X402_EXTENSIONS_VERSION}" >> $GITHUB_ENV
+          echo "PAYAI_FACILITATOR_VERSION=${PAYAI_FACILITATOR_VERSION}" >> $GITHUB_ENV
 
       - name: Record resolved versions in root package.json
         run: |
@@ -125,13 +127,12 @@ jobs:
             j.dependencies[pkg] = '^' + v;
           }
 
-          // Ensure @payai/facilitator is always present
-          if (!j.dependencies['@payai/facilitator']) {
-            j.dependencies['@payai/facilitator'] = '^1.0.0';
-          }
+          // Set @payai/facilitator to the resolved version from npm
+          const pv = process.env.PAYAI_FACILITATOR_VERSION || '1.0.0';
+          j.dependencies['@payai/facilitator'] = '^' + pv;
 
           fs.writeFileSync(p, JSON.stringify(j, null, 2));
-          console.log(`Set x402 packages to ^${v}, @payai/facilitator preserved`);
+          console.log(`Set x402 packages to ^${v}, @payai/facilitator to ^${pv}`);
           EOF
 
       - name: Determine if there are changes
