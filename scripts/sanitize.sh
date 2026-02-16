@@ -39,7 +39,7 @@ if [[ -f template/package.json ]]; then
   const j = JSON.parse(fs.readFileSync(p, 'utf8'));
   j.dependencies = j.dependencies || {};
   if (!j.dependencies['@payai/facilitator']) {
-    j.dependencies['@payai/facilitator'] = '^1.0.0';
+    j.dependencies['@payai/facilitator'] = '^2.2.4';
   }
   fs.writeFileSync(p, JSON.stringify(j, null, 2));
 PATCH_DEPS

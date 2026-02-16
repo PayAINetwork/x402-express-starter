@@ -39,7 +39,7 @@ jobs:
           X402_SVM_VERSION=$(npm view @x402/svm version 2>/dev/null || echo "0.0.0")
           X402_CORE_VERSION=$(npm view @x402/core version 2>/dev/null || echo "0.0.0")
           X402_EXTENSIONS_VERSION=$(npm view @x402/extensions version 2>/dev/null || echo "0.0.0")
-          PAYAI_FACILITATOR_VERSION=$(npm view @payai/facilitator version 2>/dev/null || echo "1.0.0")
+          PAYAI_FACILITATOR_VERSION=$(npm view @payai/facilitator version 2>/dev/null || echo "2.2.4")
 
           echo "X402_EXPRESS_VERSION=${X402_EXPRESS_VERSION}" >> $GITHUB_ENV
           echo "X402_EVM_VERSION=${X402_EVM_VERSION}" >> $GITHUB_ENV
@@ -128,7 +128,7 @@ jobs:
           }
 
           // Set @payai/facilitator to the resolved version from npm
-          const pv = process.env.PAYAI_FACILITATOR_VERSION || '1.0.0';
+          const pv = process.env.PAYAI_FACILITATOR_VERSION || '2.2.4';
           j.dependencies['@payai/facilitator'] = '^' + pv;
 
           fs.writeFileSync(p, JSON.stringify(j, null, 2));

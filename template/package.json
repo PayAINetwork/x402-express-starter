@@ -10,7 +10,7 @@
     "lint:check": "eslint . --ext .ts"
   },
   "dependencies": {
-    "@payai/facilitator": "^1.0.0",
+    "@payai/facilitator": "^2.2.4",
     "@x402/core": "^2.3.0",
     "@x402/evm": "^2.3.0",
     "@x402/express": "^2.3.0",
