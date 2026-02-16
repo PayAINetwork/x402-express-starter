@@ -31,7 +31,7 @@ jobs:
           git sparse-checkout set "${UPSTREAM_PATH}"
           echo "UPSTREAM_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
-      - name: Resolve latest x402 package versions from npm
+      - name: Resolve latest x402 and payai package versions from npm
         run: |
           set -euo pipefail
           X402_EXPRESS_VERSION=$(npm view @x402/express version 2>/dev/null || echo "0.0.0")
@@ -39,12 +39,14 @@ jobs:
           X402_SVM_VERSION=$(npm view @x402/svm version 2>/dev/null || echo "0.0.0")
           X402_CORE_VERSION=$(npm view @x402/core version 2>/dev/null || echo "0.0.0")
           X402_EXTENSIONS_VERSION=$(npm view @x402/extensions version 2>/dev/null || echo "0.0.0")
+          PAYAI_FACILITATOR_VERSION=$(npm view @payai/facilitator version 2>/dev/null || echo "2.2.4")
 
           echo "X402_EXPRESS_VERSION=${X402_EXPRESS_VERSION}" >> $GITHUB_ENV
           echo "X402_EVM_VERSION=${X402_EVM_VERSION}" >> $GITHUB_ENV
           echo "X402_SVM_VERSION=${X402_SVM_VERSION}" >> $GITHUB_ENV
           echo "X402_CORE_VERSION=${X402_CORE_VERSION}" >> $GITHUB_ENV
           echo "X402_EXTENSIONS_VERSION=${X402_EXTENSIONS_VERSION}" >> $GITHUB_ENV
+          echo "PAYAI_FACILITATOR_VERSION=${PAYAI_FACILITATOR_VERSION}" >> $GITHUB_ENV
 
       - name: Record resolved versions in root package.json
         run: |
@@ -77,24 +79,37 @@ jobs:
           chmod +x scripts/sanitize.sh
           scripts/sanitize.sh "${UPSTREAM_PATH}" "${UPSTREAM_SHA}"
 
-      - name: Verify custom env values are preserved
+      - name: Verify PayAI patches are present
         run: |
           set -euo pipefail
-          echo "Verifying FACILITATOR_URL in template/.env-local..."
 
+          echo "Verifying template/.env-local..."
           if [[ ! -f template/.env-local ]]; then
             echo "ERROR: template/.env-local not found"
             exit 1
           fi
-
-          FACILITATOR_URL=$(awk -F= '/^FACILITATOR_URL=/ {print $2; exit}' template/.env-local)
-
-          if [[ "$FACILITATOR_URL" != "https://facilitator.payai.network" ]]; then
-            echo "ERROR: FACILITATOR_URL is '$FACILITATOR_URL', expected 'https://facilitator.payai.network'"
+          if grep -q 'PAYAI_API_KEY_ID' template/.env-local; then
+            echo "✓ PAYAI_API_KEY_ID placeholder present in .env-local"
+          else
+            echo "ERROR: PAYAI_API_KEY_ID not found in template/.env-local"
             exit 1
           fi
 
-          echo "✓ FACILITATOR_URL is correctly set"
+          echo "Verifying template/index.ts..."
+          if grep -q '@payai/facilitator' template/index.ts; then
+            echo "✓ @payai/facilitator import present in index.ts"
+          else
+            echo "ERROR: @payai/facilitator import not found in template/index.ts"
+            exit 1
+          fi
+
+          echo "Verifying template/package.json..."
+          if grep -q '@payai/facilitator' template/package.json; then
+            echo "✓ @payai/facilitator dependency present in package.json"
+          else
+            echo "ERROR: @payai/facilitator not found in template/package.json"
+            exit 1
+          fi
 
       - name: Inject x402 package versions into template/package.json
         run: |
@@ -112,8 +127,12 @@ jobs:
             j.dependencies[pkg] = '^' + v;
           }
 
+          // Set @payai/facilitator to the resolved version from npm
+          const pv = process.env.PAYAI_FACILITATOR_VERSION || '2.2.4';
+          j.dependencies['@payai/facilitator'] = '^' + pv;
+
           fs.writeFileSync(p, JSON.stringify(j, null, 2));
-          console.log(`Set x402 packages to ^${v}`);
+          console.log(`Set x402 packages to ^${v}, @payai/facilitator to ^${pv}`);
           EOF
 
       - name: Determine if there are changes
