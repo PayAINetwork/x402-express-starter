@@ -7,7 +7,6 @@ import express from "express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
-import { facilitator } from "@payai/facilitator";
 
 const app = express();
 
@@ -20,7 +19,7 @@ app.use(
         mimeType: "application/json",
       },
     },
-    new x402ResourceServer(new HTTPFacilitatorClient(facilitator))
+    new x402ResourceServer(new HTTPFacilitatorClient({ url: facilitatorUrl }))
       .register("eip155:84532", new ExactEvmScheme()),
   ),
 );
@@ -33,6 +32,7 @@ app.get("/weather", (req, res) => res.json({ weather: "sunny", temperature: 70 }
 - Node.js v20+ (install via [nvm](https://github.com/nvm-sh/nvm))
 - pnpm v10 (install via [pnpm.io/installation](https://pnpm.io/installation))
 - Valid EVM and SVM addresses for receiving payments 
+- URL of a facilitator supporting the desired payment network, see [facilitator list](https://www.x402.org/ecosystem?category=facilitators) 
 
 ## Setup
 
@@ -44,6 +44,7 @@ cp .env-local .env
 
 and fill required environment variables:
 
+- `FACILITATOR_URL` - Facilitator endpoint URL
 - `EVM_ADDRESS` - Ethereum address to receive payments
 - `SVM_ADDRESS` - Solana address to receive payments
 
@@ -58,17 +59,6 @@ cd servers/express
 ```bash
 pnpm dev
 ```
-
-## Going to Production
-
-When you're ready to move beyond the free tier, create a merchant account at [merchant.payai.network](https://merchant.payai.network) and set your API key environment variables:
-
-```env
-PAYAI_API_KEY_ID=your-api-key-id
-PAYAI_API_KEY_SECRET=payai_sk_your-base64-encoded-secret
-```
-
-No code changes are needed — the `@payai/facilitator` package automatically picks up these env vars and authenticates all facilitator requests with a JWT Bearer token.
 
 ## Testing the Server
 
@@ -235,25 +225,16 @@ const resourceServer = new x402ResourceServer(facilitatorClient)
 
 ## Facilitator Config
 
-The `@payai/facilitator` package provides a pre-configured facilitator that points to `https://facilitator.payai.network` and automatically handles JWT authentication when API keys are set:
+The `HTTPFacilitatorClient` connects to a facilitator service that verifies and settles payments on-chain:
 
 ```typescript
-import { facilitator } from "@payai/facilitator";
-import { HTTPFacilitatorClient } from "@x402/core/server";
+const facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl });
 
-// Works out of the box on the free tier.
-// Set PAYAI_API_KEY_ID + PAYAI_API_KEY_SECRET env vars for authenticated access.
-const facilitatorClient = new HTTPFacilitatorClient(facilitator);
-```
-
-For explicit credentials or a custom facilitator URL, use `createFacilitatorConfig`:
-
-```typescript
-import { createFacilitatorConfig } from "@payai/facilitator";
-
-const facilitatorClient = new HTTPFacilitatorClient(
-  createFacilitatorConfig("my-key-id", "payai_sk_...")
-);
+// Or use multiple facilitators for redundancy
+const facilitatorClient = [
+  new HTTPFacilitatorClient({ url: primaryFacilitatorUrl }),
+  new HTTPFacilitatorClient({ url: backupFacilitatorUrl }),
+];
 ```
 
 ## Next Steps

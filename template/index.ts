@@ -1,10 +1,10 @@
 import { config } from "dotenv";
 import express from "express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
+import { facilitator } from "@payai/facilitator";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { ExactSvmScheme } from "@x402/svm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
-import { facilitator } from "@payai/facilitator";
 config();
 
 const evmAddress = process.env.EVM_ADDRESS as `0x${string}`;
