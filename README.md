@@ -1,3 +1,13 @@
+> [!WARNING]
+> ## Deprecated — no longer maintained
+>
+> This starter is retired. Install the x402 packages directly instead and follow the
+> **[PayAI x402 quickstart](https://docs.payai.network/x402/quickstart)**, which carries the
+> same working example inline.
+>
+> The npm package stays installable so existing builds keep working, but it will not
+> receive updates. This repository is archived and read-only.
+
 # x402 Express Starter
 
 Starter for running an x402 Express server.
